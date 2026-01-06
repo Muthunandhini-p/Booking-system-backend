@@ -1,0 +1,56 @@
+package com.hospital.appointment.controller;
+
+import com.hospital.appointment.entity.Appointment;
+import com.hospital.appointment.service.AppointmentService;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/appointments")
+@CrossOrigin(origins = "http://localhost:5173")
+public class AppointmentController {
+
+    private final AppointmentService service;
+
+    public AppointmentController(AppointmentService service) {
+        this.service = service;
+    }
+
+    // ✅ BOOK
+    @PostMapping
+    public Appointment book(@RequestBody Appointment appointment) {
+        return service.saveAppointment(appointment);
+    }
+
+    // ✅ GET ALL
+    @GetMapping
+    public List<Appointment> getAll() {
+        return service.getAllAppointments();
+    }
+
+    // 🔁 RESCHEDULE
+    @PutMapping("/{id}")
+    public Appointment reschedule(
+            @PathVariable Long id,
+            @RequestParam String date,
+            @RequestParam String time
+    ) {
+        return service.reschedule(id, date, time);
+    }
+
+    // ❌ CANCEL
+    @DeleteMapping("/{id}")
+    public void cancel(@PathVariable Long id) {
+        service.cancel(id);
+    }
+}
