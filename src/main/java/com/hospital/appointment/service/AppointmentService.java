@@ -67,12 +67,20 @@ public class AppointmentService {
     }
 
     public void cancel(Long id) {
+
         Appointment appt = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         repo.deleteById(id);
 
-        // ❌ REMOVE RabbitMQ
-        // producer.sendMessage("Appointment CANCELLED with ID " + id);
+        emailService.sendEmail(
+                appt.getEmail(),
+                "Appointment Cancelled",
+                "Hello " + appt.getName() + ",\n\n" +
+                        "Your appointment has been CANCELLED.\n" +
+                        "Doctor: " + appt.getDoctor() + "\n" +
+                        "Date: " + appt.getDate() + "\n" +
+                        "Time: " + appt.getTime()
+        );
     }
 }
