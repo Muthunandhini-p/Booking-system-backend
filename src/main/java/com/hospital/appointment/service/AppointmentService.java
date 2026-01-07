@@ -1,8 +1,10 @@
+
+
 package com.hospital.appointment.service;
 
 import com.hospital.appointment.entity.Appointment;
+import com.hospital.appointment.notification.EmailService;
 import com.hospital.appointment.repository.AppointmentRepository;
-import com.hospital.appointment.messaging.AppointmentProducer;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,14 +13,32 @@ import java.util.List;
 public class AppointmentService {
 
     private final AppointmentRepository repo;
+    private final EmailService emailService;
 
-    public AppointmentService(AppointmentRepository repo) {
+    public AppointmentService(AppointmentRepository repo,
+                              EmailService emailService) {
         this.repo = repo;
+        this.emailService = emailService;
     }
 
+    // ✅ BOOK
     public Appointment saveAppointment(Appointment appointment) {
         appointment.setStatus("BOOKED");
-        return repo.save(appointment);
+
+        Appointment saved = repo.save(appointment);
+
+        // ✅ SEND EMAIL DIRECTLY
+        emailService.sendEmail(
+                saved.getEmail(),
+                "Appointment Confirmed",
+                "Hello " + saved.getName() + ",\n\n" +
+                        "Your appointment is confirmed.\n" +
+                        "Doctor: " + saved.getDoctor() + "\n" +
+                        "Date: " + saved.getDate() + "\n" +
+                        "Time: " + saved.getTime()
+        );
+
+        return saved;
     }
 
     public List<Appointment> getAllAppointments() {
@@ -28,13 +48,33 @@ public class AppointmentService {
     public Appointment reschedule(Long id, String date, String time) {
         Appointment appt = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
         appt.setDate(date);
         appt.setTime(time);
         appt.setStatus("RESCHEDULED");
-        return repo.save(appt);
+
+        Appointment updated = repo.save(appt);
+
+        emailService.sendEmail(
+                updated.getEmail(),
+                "Appointment Rescheduled",
+                "Your appointment has been rescheduled.\n" +
+                        "New Date: " + date + "\n" +
+                        "New Time: " + time
+        );
+
+        return updated;
     }
 
     public void cancel(Long id) {
+        Appointment appt = repo.findById(id).orElse(null);
+        if (appt != null) {
+            emailService.sendEmail(
+                    appt.getEmail(),
+                    "Appointment Cancelled",
+                    "Your appointment has been cancelled."
+            );
+        }
         repo.deleteById(id);
     }
 }
