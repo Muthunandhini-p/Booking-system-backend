@@ -11,56 +11,30 @@ import java.util.List;
 public class AppointmentService {
 
     private final AppointmentRepository repo;
-    private final AppointmentProducer producer;
 
-    public AppointmentService(AppointmentRepository repo,
-                              AppointmentProducer producer) {
+    public AppointmentService(AppointmentRepository repo) {
         this.repo = repo;
-        this.producer = producer;
     }
 
-    // ✅ BOOK APPOINTMENT
     public Appointment saveAppointment(Appointment appointment) {
         appointment.setStatus("BOOKED");
-
-        Appointment saved = repo.save(appointment);
-
-        producer.sendMessage(
-                "Appointment BOOKED for " + saved.getName()
-        );
-
-        return saved;
+        return repo.save(appointment);
     }
 
-    // ✅ GET ALL APPOINTMENTS
     public List<Appointment> getAllAppointments() {
         return repo.findAll();
     }
 
-    // 🔁 RESCHEDULE APPOINTMENT
     public Appointment reschedule(Long id, String date, String time) {
         Appointment appt = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
         appt.setDate(date);
         appt.setTime(time);
         appt.setStatus("RESCHEDULED");
-
-        Appointment updated = repo.save(appt);
-
-        producer.sendMessage(
-                "Appointment RESCHEDULED for " + updated.getName()
-        );
-
-        return updated;
+        return repo.save(appt);
     }
 
-    // ❌ CANCEL APPOINTMENT
     public void cancel(Long id) {
         repo.deleteById(id);
-
-        producer.sendMessage(
-                "Appointment CANCELLED with ID " + id
-        );
     }
 }

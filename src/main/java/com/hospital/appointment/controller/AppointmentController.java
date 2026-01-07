@@ -14,10 +14,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+@CrossOrigin(
+        origins = {
+                "https://booking-system-frontend-virid.vercel.app",
+                "http://localhost:5173"
+        }
+)
 
 @RestController
 @RequestMapping("/api/appointments")
-@CrossOrigin(origins = "http://localhost:5173")
 public class AppointmentController {
 
     private final AppointmentService service;
@@ -29,9 +34,9 @@ public class AppointmentController {
     // ✅ BOOK
     @PostMapping
     public Appointment book(@RequestBody Appointment appointment) {
+
         return service.saveAppointment(appointment);
     }
-
     // ✅ GET ALL
     @GetMapping
     public List<Appointment> getAll() {
