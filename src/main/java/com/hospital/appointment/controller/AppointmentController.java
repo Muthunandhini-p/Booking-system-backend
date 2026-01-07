@@ -1,6 +1,7 @@
 package com.hospital.appointment.controller;
 
 import com.hospital.appointment.entity.Appointment;
+import com.hospital.appointment.notification.EmailService;
 import com.hospital.appointment.service.AppointmentService;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,9 +27,11 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService service;
+    private final EmailService emailService;
 
-    public AppointmentController(AppointmentService service) {
+    public AppointmentController(AppointmentService service,EmailService emailService) {
         this.service = service;
+        this.emailService = emailService;
     }
 
     // ✅ BOOK
@@ -57,5 +60,16 @@ public class AppointmentController {
     @DeleteMapping("/{id}")
     public void cancel(@PathVariable Long id) {
         service.cancel(id);
+    }
+    @GetMapping("/test-mail")
+    public String testMail() {
+
+        emailService.sendEmail(
+                "yourgmail@gmail.com",
+                "Test Mail",
+                "If you got this, mail works"
+        );
+
+        return "Mail triggered";
     }
 }
