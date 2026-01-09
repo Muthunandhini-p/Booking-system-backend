@@ -17,7 +17,10 @@ public class EmailService {
 
     public void sendEmail(String to, String subject, String body) {
 
-        Email from = new Email("no-reply@yourdomain.com"); // can be any verified sender
+        System.out.println("📨 Preparing SendGrid email...");
+        System.out.println("➡ To: " + to);
+
+        Email from = new Email("nandhulogesh9173@gmail.com"); // ✅ VERIFIED SENDER
         Email toEmail = new Email(to);
         Content content = new Content("text/plain", body);
         Mail mail = new Mail(from, subject, toEmail, content);
@@ -32,9 +35,12 @@ public class EmailService {
 
             Response response = sg.api(request);
 
-            System.out.println("📧 SendGrid Status: " + response.getStatusCode());
+            System.out.println("📧 SendGrid Status Code: " + response.getStatusCode());
+            System.out.println("📧 SendGrid Response Body: " + response.getBody());
+
         } catch (IOException e) {
-            throw new RuntimeException("❌ SendGrid email failed", e);
+            System.out.println("❌ SendGrid mail failed");
+            e.printStackTrace();
         }
     }
 }
