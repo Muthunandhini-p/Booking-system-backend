@@ -63,13 +63,11 @@ public class AppointmentController {
     }
     @GetMapping("/test-mail")
     public String testMail() {
-
         emailService.sendEmail(
                 "yourgmail@gmail.com",
-                "Test Mail",
-                "If you got this, mail works"
+                "SendGrid Test Mail",
+                "🎉 If you got this, SendGrid works!"
         );
-
-        return "Mail triggered";
+        return "Mail sent via SendGrid";
     }
 }

@@ -1,30 +1,40 @@
 package com.hospital.appointment.notification;
 
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.sendgrid.*;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${SENDGRID_API_KEY}")
+    private String sendGridApiKey;
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
-    }
-
-    // ✅ NOT STATIC
     public void sendEmail(String to, String subject, String body) {
 
-        System.out.println("📧 Sending email to: " + to);
+        Email from = new Email("no-reply@yourdomain.com"); // can be any verified sender
+        Email toEmail = new Email(to);
+        Content content = new Content("text/plain", body);
+        Mail mail = new Mail(from, subject, toEmail, content);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
+        SendGrid sg = new SendGrid(sendGridApiKey);
+        Request request = new Request();
 
-        mailSender.send(message);
+        try {
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
 
-        System.out.println("✅ Email sent successfully!");
+            Response response = sg.api(request);
+
+            System.out.println("📧 SendGrid Status: " + response.getStatusCode());
+        } catch (IOException e) {
+            throw new RuntimeException("❌ SendGrid email failed", e);
+        }
     }
 }
