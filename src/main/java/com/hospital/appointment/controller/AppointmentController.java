@@ -64,7 +64,7 @@ public class AppointmentController {
     @GetMapping("/test-mail")
     public String testMail() {
         emailService.sendEmail(
-                "yourgmail@gmail.com",
+                "nandhulogesh9173gmail@gmail.com",
                 "SendGrid Test Mail",
                 "🎉 If you got this, SendGrid works!"
         );
