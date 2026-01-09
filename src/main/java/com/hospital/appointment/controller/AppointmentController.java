@@ -65,9 +65,9 @@ public class AppointmentController {
     public String testMail() {
         emailService.sendEmail(
                 "nandhulogesh9173@gmail.com",
-                "SendGrid Test Mail",
-                "🎉 If you got this, SendGrid works!"
+                "Brevo Test Mail",
+                "🎉 If you received this, Brevo works perfectly!"
         );
-        return "Mail sent via SendGrid";
+        return "Mail sent via Brevo";
     }
 }

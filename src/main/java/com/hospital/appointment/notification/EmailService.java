@@ -1,46 +1,47 @@
 package com.hospital.appointment.notification;
 
-import com.sendgrid.*;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    @Value("${SENDGRID_API_KEY}")
-    private String sendGridApiKey;
+    private final WebClient webClient;
+
+    public EmailService(@Value("${BREVO_API_KEY}") String apiKey) {
+        this.webClient = WebClient.builder()
+                .baseUrl("https://api.brevo.com/v3")
+                .defaultHeader("api-key", apiKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
 
     public void sendEmail(String to, String subject, String body) {
 
-        System.out.println("📨 Preparing SendGrid email...");
-        System.out.println("➡ To: " + to);
+        Map<String, Object> payload = Map.of(
+                "sender", Map.of(
+                        "name", "Hospital Appointment",
+                        "email", "no-reply@brevo.com"
+                ),
+                "to", new Object[]{
+                        Map.of("email", to)
+                },
+                "subject", subject,
+                "htmlContent", body.replace("\n", "<br>")
+        );
 
-        Email from = new Email("nandhulogesh9173@gmail.com"); // ✅ VERIFIED SENDER
-        Email toEmail = new Email(to);
-        Content content = new Content("text/plain", body);
-        Mail mail = new Mail(from, subject, toEmail, content);
-
-        SendGrid sg = new SendGrid(sendGridApiKey);
-        Request request = new Request();
-
-        try {
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
-
-            Response response = sg.api(request);
-
-            System.out.println("📧 SendGrid Status Code: " + response.getStatusCode());
-            System.out.println("📧 SendGrid Response Body: " + response.getBody());
-
-        } catch (IOException e) {
-            System.out.println("❌ SendGrid mail failed");
-            e.printStackTrace();
-        }
+        webClient.post()
+                .uri("/smtp/email")
+                .bodyValue(payload)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnSuccess(res -> System.out.println("✅ Email sent via Brevo"))
+                .doOnError(err -> System.out.println("❌ Email failed: " + err.getMessage()))
+                .block();
     }
 }
