@@ -26,7 +26,7 @@ public class EmailService {
         Map<String, Object> payload = Map.of(
                 "sender", Map.of(
                         "name", "Hospital Appointment",
-                        "email", "no-reply@brevo.com"
+                        "email", "nandhulogesh9173@gmail.com"
                 ),
                 "to", new Object[]{
                         Map.of("email", to)
