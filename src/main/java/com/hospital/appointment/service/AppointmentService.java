@@ -104,4 +104,19 @@ public class AppointmentService {
         // ✅ Then delete
         repo.deleteById(id);
     }
+    public void resendConfirmation(Long id) {
+
+        Appointment appt = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        emailService.sendEmail(
+                appt.getEmail(),
+                "Appointment Confirmation (Resent)",
+                "Hello " + appt.getName() + ",\n\n" +
+                        "This is a RESENT confirmation for your appointment.\n\n" +
+                        "Doctor: " + appt.getDoctor() + "\n" +
+                        "Date: " + appt.getDate() + "\n" +
+                        "Time: " + appt.getTime()
+        );
+    }
 }

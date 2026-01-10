@@ -61,6 +61,11 @@ public class AppointmentController {
     public void cancel(@PathVariable Long id) {
         service.cancel(id);
     }
+    @PostMapping("/{id}/resend")
+    public String resendMail(@PathVariable Long id) {
+        service.resendConfirmation(id);
+        return "Confirmation email resent";
+    }
     @GetMapping("/test-mail")
     public String testMail() {
         emailService.sendEmail(
