@@ -16,7 +16,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    // getters & setters
     public Long getId() {
         return id;
     }
@@ -26,15 +25,15 @@ public class User {
     }
 
     public String getUsername() {
-        return username;   // ✅ MUST return
+        return username;
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        this.username = username.trim();
     }
 
     public String getPassword() {
-        return password;   // ✅ MUST return
+        return password;
     }
 
     public void setPassword(String password) {

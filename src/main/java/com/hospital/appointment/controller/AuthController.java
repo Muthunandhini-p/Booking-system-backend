@@ -1,4 +1,5 @@
 package com.hospital.appointment.controller;
+
 import com.hospital.appointment.dto.RegisterRequest;
 import com.hospital.appointment.entity.User;
 import com.hospital.appointment.service.AuthService;
