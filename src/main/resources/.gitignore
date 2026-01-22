@@ -2,4 +2,3 @@
 /.idea
 *.log
 .env
-application.properties
