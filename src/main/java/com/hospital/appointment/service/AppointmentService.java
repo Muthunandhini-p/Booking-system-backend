@@ -2,6 +2,7 @@ package com.hospital.appointment.service;
 
 import com.hospital.appointment.entity.Appointment;
 import com.hospital.appointment.notification.EmailService;
+import com.hospital.appointment.notification.SmsService;
 import com.hospital.appointment.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,20 +13,25 @@ public class AppointmentService {
 
     private final AppointmentRepository repo;
     private final EmailService emailService;
+    private final SmsService smsService;
 
-    public AppointmentService(AppointmentRepository repo,
-                              EmailService emailService) {
+    public AppointmentService(
+            AppointmentRepository repo,
+            EmailService emailService,
+            SmsService smsService
+    ) {
         this.repo = repo;
         this.emailService = emailService;
+        this.smsService = smsService;
     }
 
     // ✅ BOOK APPOINTMENT
     public Appointment saveAppointment(Appointment appointment) {
-        appointment.setStatus("BOOKED");
 
+        appointment.setStatus("BOOKED");
         Appointment saved = repo.save(appointment);
 
-        // ✅ Send confirmation email
+        // 📧 EMAIL
         try {
             emailService.sendEmail(
                     saved.getEmail(),
@@ -40,6 +46,18 @@ public class AppointmentService {
             System.out.println("Booking mail failed: " + e.getMessage());
         }
 
+        // 📱 SMS
+        try {
+            smsService.sendSms(
+                    "+91" + saved.getPhone(),
+                    "Appointment Confirmed\nDoctor: " + saved.getDoctor()
+                            + "\nDate: " + saved.getDate()
+                            + "\nTime: " + saved.getTime()
+            );
+        } catch (Exception e) {
+            System.out.println("Booking SMS failed: " + e.getMessage());
+        }
+
         return saved;
     }
 
@@ -50,6 +68,7 @@ public class AppointmentService {
 
     // ✅ RESCHEDULE
     public Appointment reschedule(Long id, String date, String time) {
+
         Appointment appt = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
@@ -59,64 +78,71 @@ public class AppointmentService {
 
         Appointment updated = repo.save(appt);
 
-        try {
-            emailService.sendEmail(
-                    updated.getEmail(),
-                    "Appointment Rescheduled",
-                    "Hello " + updated.getName() + ",\n\n" +
-                            "Your appointment has been RESCHEDULED.\n\n" +
-                            "New Date: " + date + "\n" +
-                            "New Time: " + time
-            );
-        } catch (Exception e) {
-            System.out.println("Reschedule mail failed: " + e.getMessage());
-        }
+        // 📧 EMAIL
+        emailService.sendEmail(
+                updated.getEmail(),
+                "Appointment Rescheduled",
+                "Hello " + updated.getName() + ",\n\n" +
+                        "Your appointment has been RESCHEDULED.\n\n" +
+                        "New Date: " + date + "\n" +
+                        "New Time: " + time
+        );
+
+        // 📱 SMS
+        smsService.sendSms(
+                "+91" + updated.getPhone(),
+                "Appointment Rescheduled\nNew Date: " + date
+                        + "\nNew Time: " + time
+        );
 
         return updated;
     }
 
-    // ✅ CANCEL (FIXED — NO CRASH, MAIL ALWAYS SENT IF EXISTS)
+    // ✅ CANCEL
     public void cancel(Long id) {
 
         Appointment appt = repo.findById(id).orElse(null);
+        if (appt == null) return;
 
-        if (appt == null) {
-            // Already deleted or wrong ID → no crash
-            System.out.println("Cancel skipped: Appointment not found");
-            return;
-        }
+        // 📧 EMAIL
+        emailService.sendEmail(
+                appt.getEmail(),
+                "Appointment Cancelled",
+                "Hello " + appt.getName() + ",\n\n" +
+                        "Your appointment has been CANCELLED.\n\n" +
+                        "Doctor: " + appt.getDoctor()
+        );
 
-        // ✅ Send mail FIRST
-        try {
-            emailService.sendEmail(
-                    appt.getEmail(),
-                    "Appointment Cancelled",
-                    "Hello " + appt.getName() + ",\n\n" +
-                            "Your appointment has been CANCELLED.\n\n" +
-                            "Doctor: " + appt.getDoctor() + "\n" +
-                            "Date: " + appt.getDate() + "\n" +
-                            "Time: " + appt.getTime()
-            );
-        } catch (Exception e) {
-            System.out.println("Cancel mail failed: " + e.getMessage());
-        }
+        // 📱 SMS
+        smsService.sendSms(
+                "+91" + appt.getPhone(),
+                "Your appointment has been CANCELLED.\nDoctor: "
+                        + appt.getDoctor()
+        );
 
-        // ✅ Then delete
         repo.deleteById(id);
     }
+
+    // ✅ RESEND
     public void resendConfirmation(Long id) {
 
         Appointment appt = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        // 📧 EMAIL
         emailService.sendEmail(
                 appt.getEmail(),
                 "Appointment Confirmation (Resent)",
                 "Hello " + appt.getName() + ",\n\n" +
-                        "This is a RESENT confirmation for your appointment.\n\n" +
-                        "Doctor: " + appt.getDoctor() + "\n" +
-                        "Date: " + appt.getDate() + "\n" +
-                        "Time: " + appt.getTime()
+                        "This is a RESENT confirmation.\n\n" +
+                        "Doctor: " + appt.getDoctor()
+        );
+
+        // 📱 SMS
+        smsService.sendSms(
+                "+91" + appt.getPhone(),
+                "Appointment Confirmation (Resent)\nDoctor: "
+                        + appt.getDoctor()
         );
     }
 }
